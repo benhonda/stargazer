@@ -1,11 +1,14 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { FirestoreData } from "@/components/FirestoreData";
+import { IKnow } from "@/components/IKnowWhoYouAre";
 ---
 
 <Layout title="Stargazer">
+  <FirestoreData client:only />
   <main>
-    Hello, world
-
     <h1 class="text-2xl">Hello world</h1>
+
+    <IKnow client:only />
   </main>
 </Layout>
