@@ -32,10 +32,16 @@ export function firestoreConverter<Model>() {
         ...data,
         _id: snapshot.id,
         _ref: snapshot.ref,
-        _created_at:
-          typeof data._created_at === "string" ? (data._created_at as string) : data._created_at.toDate().toString(),
-        _updated_at:
-          typeof data._updated_at === "string" ? (data._updated_at as string) : data._updated_at.toDate().toString(),
+        _created_at: data._created_at
+          ? typeof data._created_at === "string"
+            ? (data._created_at as string)
+            : data._created_at.toDate().toString()
+          : "",
+        _updated_at: data._updated_at
+          ? typeof data._updated_at === "string"
+            ? (data._updated_at as string)
+            : data._updated_at.toDate().toString()
+          : "",
       };
     },
   };

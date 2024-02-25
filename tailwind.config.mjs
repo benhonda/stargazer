@@ -12,6 +12,7 @@ export default {
       gray: {
         ...colors.zinc,
         925: "#0C0C0D",
+        750: "#303035",
       },
       primary: colors.violet,
       secondary: colors.amber,

@@ -1,13 +1,24 @@
-import { userDataStore } from "@/stores/firestoreStore";
+import { $userData, $userFromFirebase } from "@/utils/stores";
 import { useStore } from "@nanostores/react";
+import { useEffect, useState } from "react";
 
 export function IKnow() {
-  const $userData = useStore(userDataStore);
+  const userData = useStore($userData);
+  const user = useStore($userFromFirebase);
 
-  if (!$userData) {
+  console.log({ userData, user });
+
+  const [testHydration, setTestHydration] = useState("default");
+
+  useEffect(() => {
+    setTestHydration("hydrated");
+  }, []);
+
+  if (!userData) {
     return (
       <>
         <p>I don't know who you are...</p>
+        <p>{testHydration}</p>
       </>
     );
   }
@@ -15,7 +26,7 @@ export function IKnow() {
   return (
     <>
       <p>I know who you are...</p>
-      <p>You're {$userData.firstName}</p>
+      <p>You're {userData.firstName}</p>
     </>
   );
 }

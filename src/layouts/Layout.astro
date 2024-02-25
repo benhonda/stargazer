@@ -18,8 +18,80 @@ const { title } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+
+    <script>
+      // import { $authLoaded } from "@/utils/stores";
+      import { auth, db } from "@/firebase/client";
+      import { User } from "@/utils/firestore.types";
+      import { $authLoaded, $userData, $userFromFirebase } from "@/utils/stores";
+      import { onAuthStateChanged } from "firebase/auth";
+      import { Unsubscribe, doc, onSnapshot } from "firebase/firestore";
+      console.log("hello from the head!");
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          console.log("User is authenticated");
+
+          // set the user
+          $userFromFirebase.set(user);
+
+          // redirect to / if user is on /login
+          if (location.pathname === "/login") {
+            location.replace("/");
+          }
+        } else {
+          console.log("User is not authenticated");
+
+          // clear the user
+          $userFromFirebase.set(null);
+
+          // redirect to /login if user is not authenticated
+          if (location.pathname !== "/login") {
+            location.replace("/login");
+          }
+        }
+
+        $authLoaded.set(true);
+      });
+
+      // TODO: cleanup the authSubscriber ??? Do I need to do this?
+
+      // this is only called on next store change
+      // see: https://github.com/nanostores/nanostores?tab=readme-ov-file#vanilla-js
+      $authLoaded.listen((loaded) => {
+        const userUid = $userFromFirebase.get()?.uid;
+        // attach listener to user data in Firestore
+        let unsub: Unsubscribe;
+        if (loaded && userUid) {
+          const docRef = doc(db, "users", userUid);
+          unsub = onSnapshot(docRef, (doc) => {
+            const source = doc.metadata.hasPendingWrites ? "Local" : "Server";
+            console.log("Data at ", docRef.path, " from ", source, ": ", doc.data());
+
+            $userData.set((doc.data() as User) || null);
+          });
+        }
+
+        // hide the app until the auth has loaded
+        // TODO: can we do better...?
+        const appElement = document.getElementById("app");
+        let tm: NodeJS.Timeout;
+        if (appElement) {
+          tm = setTimeout(() => {
+            appElement.style.display = loaded ? "block" : "none";
+          }, 100);
+        }
+
+        return () => {
+          unsub();
+          clearTimeout(tm);
+        };
+      });
+    </script>
   </head>
   <body>
-    <slot />
+    <div id="app" style="display: none;">
+      <slot />
+    </div>
   </body>
 </html>

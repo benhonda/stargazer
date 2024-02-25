@@ -4,13 +4,13 @@ import { useDocumentDataStream } from "@/utils/firestore.useDocument";
 import { doc } from "firebase/firestore";
 import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { userDataStore } from "@/stores/firestoreStore";
+import { $userData } from "@/utils/stores";
 
 export function FirestoreData() {
   /**
    * Stores
    */
-  const $userData = useStore(userDataStore);
+  // const userData = useStore($userData);
 
   /**
    * Listen to the user document
@@ -28,7 +28,7 @@ export function FirestoreData() {
     console.log("render");
     if (!data) return;
 
-    userDataStore.set(data);
+    $userData.set(data);
   }, [data]);
 
   return null;
