@@ -23,9 +23,11 @@ const { title } = Astro.props;
       // import { $authLoaded } from "@/utils/stores";
       import { auth, db } from "@/firebase/client";
       import { User } from "@/utils/firestore.types";
-      import { $authLoaded, $userData, $userFromFirebase } from "@/utils/stores";
+      import { $authLoaded, $userData, $userFromFirebase, $githubStarData } from "@/utils/stores";
       import { onAuthStateChanged } from "firebase/auth";
       import { Unsubscribe, doc, onSnapshot } from "firebase/firestore";
+      import { Octokit, App } from "octokit";
+      import { Convert, TypesGithubStarAPIResponse } from "@/utils/types.github.starApiResponse";
       console.log("hello from the head!");
 
       onAuthStateChanged(auth, (user) => {
@@ -58,11 +60,28 @@ const { title } = Astro.props;
 
       // this is only called on next store change
       // see: https://github.com/nanostores/nanostores?tab=readme-ov-file#vanilla-js
-      $authLoaded.listen((loaded) => {
+      $authLoaded.listen(async (loaded) => {
+        /**
+         * show the app when auth is loaded
+         *
+         * TODO: can we do better...?
+         * TODO: NOTE: if we put this at the end of this fn, it will run after we get all the data from Firestore and GitHub
+         */
+        const appElement = document.getElementById("app");
+        let tm: NodeJS.Timeout;
+        if (appElement) {
+          tm = setTimeout(() => {
+            appElement.style.display = loaded ? "block" : "none";
+          }, 100);
+        }
+
         const userUid = $userFromFirebase.get()?.uid;
         // attach listener to user data in Firestore
         let unsub: Unsubscribe;
         if (loaded && userUid) {
+          /**
+           * Firestore
+           */
           const docRef = doc(db, "users", userUid);
           unsub = onSnapshot(docRef, (doc) => {
             const source = doc.metadata.hasPendingWrites ? "Local" : "Server";
@@ -70,16 +89,24 @@ const { title } = Astro.props;
 
             $userData.set((doc.data() as User) || null);
           });
-        }
 
-        // hide the app until the auth has loaded
-        // TODO: can we do better...?
-        const appElement = document.getElementById("app");
-        let tm: NodeJS.Timeout;
-        if (appElement) {
-          tm = setTimeout(() => {
-            appElement.style.display = loaded ? "block" : "none";
-          }, 100);
+          /**
+           * GitHub
+           */
+          // const octokit = new Octokit({ auth: import.meta.env.PUBLIC_GITHUB_PAT });
+
+          // const data = await octokit.paginate<TypesGithubStarAPIResponse>({
+          //   method: "GET",
+          //   url: "/user/starred",
+          //   headers: {
+          //     "X-GitHub-Api-Version": "2022-11-28",
+          //   },
+          //   per_page: 100, // gets 100 repos per page
+          // });
+
+          // $githubStarData.set(data);
+
+          // console.log("GitHub starred repos: ", $githubStarData.get());
         }
 
         return () => {

@@ -27,6 +27,9 @@ export default {
         display: ["GeneralSans-Variable", ...defaultTheme.fontFamily.serif],
         body: ["Inter", ...defaultTheme.fontFamily.sans],
       },
+      size: {
+        4.5: "1.125rem",
+      },
     },
   },
   plugins: [],

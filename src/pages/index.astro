@@ -2,15 +2,14 @@
 import { $userData } from "@/utils/stores";
 import Layout from "../layouts/Layout.astro";
 // import { FirestoreData } from "@/components/FirestoreData";
-// import { IKnow } from "@/components/IKnowWhoYouAre";
-import { LogoutButton } from "@/components-custom/LogoutButton";
+import { LogoutButton } from "@/components-custom/nav/LogoutButton";
 import { Icon } from "@/components/Icon";
+import { StargazerSidebarDirectory } from "@/components-custom/nav/StargazerSidebarList";
+import { PinnedThingsList } from "@/components-custom/home/PinnedThingsList";
+import { Sort } from "@/components-custom/home/Sort";
 ---
 
 <Layout title="Stargazer">
-  <!-- <FirestoreData client:only="react" /> -->
-  <!-- <FirestoreData client:only="react" /> -->
-
   <!-- TODO: view transitions for sidebar
     https://docs.astro.build/en/guides/view-transitions/
   -->
@@ -18,16 +17,25 @@ import { Icon } from "@/components/Icon";
     <!-- sidebar -->
     <aside class="fixed left-0 top-0 w-64 h-full bg-gray-900 border-r border-gray-800 flex flex-col pb-8">
       <div class="shrink-0 p-4">
-        <h3 class="text-lg">Stargazer</h3>
+        <h3 class="text-base">Stargazer</h3>
         <p class="text-sm text-gray-500">Welcome</p>
       </div>
 
-      <nav class="flex-1 mt-8 p-2 text-sm flex flex-col">
+      <nav class="flex-1 mt-6 p-2 text-sm flex flex-col">
         <div class="flex-1">
-          <a href="/" class="inline-flex w-full py-2 px-2 bg-gray-800 rounded-lg">
-            <Icon name="clock" className="size-5 text-gray-400 mt-px mr-2" strokeWidth={2.5} />
+          <a href="/" class="sidebar-item active">
+            <Icon name="clock" className="sidebar-item-svg" strokeWidth={2.5} />
             <span>Recents</span>
           </a>
+
+          <div class="mt-1">
+            <div class="sidebar-item">
+              <Icon name="folder" className="sidebar-item-svg size-4.5 ml-px text-gray-500" strokeWidth={2.5} />
+              <span class="text-gray-500">Stargazer lists</span>
+            </div>
+
+            <StargazerSidebarDirectory client:only="react" />
+          </div>
         </div>
 
         <div class="shrink-0">
@@ -37,8 +45,43 @@ import { Icon } from "@/components/Icon";
     </aside>
 
     <!-- main content -->
-    <main class="p-4">
-      <h1 class="text-lg">Recents</h1>
+    <main>
+      <!-- top -->
+      <div class="p-4">
+        <h1 class="text-base text-gray-500">Recents</h1>
+
+        <div class="pt-9 pb-6">
+          <span class="label">Pinned</span>
+          <PinnedThingsList client:only="react" />
+        </div>
+      </div>
+      <!-- end top -->
+
+      <!-- divider -->
+      <hr class="border-gray-800" />
+      <!-- end divider -->
+
+      <!-- sorting and filtering -->
+      <div class="p-4 flex space-x-4">
+        <div>
+          <span class="label block">Sort</span>
+          <Sort client:only="react" />
+        </div>
+
+        <div>
+          <span class="label block">Filter</span>
+          <Sort client:only="react" />
+        </div>
+      </div>
+      <!-- end sorting -->
+
+      <!-- content -->
+      <div class="p-4">
+        <div class="pt-8">
+          <h2 class="text-xl">Starred this week</h2>
+        </div>
+      </div>
+      <!-- end content -->
     </main>
   </div>
 </Layout>

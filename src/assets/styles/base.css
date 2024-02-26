@@ -16,5 +16,20 @@
   }
 }
 
-@layer utilities {
+@layer components {
+  .sidebar-item {
+    @apply inline-flex w-full py-2 px-2 rounded-lg;
+  }
+
+  .sidebar-item.active {
+    @apply bg-gray-800;
+  }
+
+  .sidebar-item-svg {
+    @apply size-5 mt-px mr-2 text-gray-400;
+  }
+
+  .label {
+    @apply text-sm text-gray-500 inline-block mb-2;
+  }
 }
