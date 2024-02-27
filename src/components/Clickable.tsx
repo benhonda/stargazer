@@ -5,7 +5,7 @@
 import { twMerge } from "tailwind-merge";
 
 const primaryClasses =
-  "bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-gray-600 text-gray-300 px-2 py-1 text-sm rounded-md";
+  "bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-gray-600 text-gray-300 px-2.5 py-1.5 text-sm rounded-md";
 
 export function Clickable(
   props: { variant: "primary" | "primary-lg"; as?: "button" | "a" } & React.ButtonHTMLAttributes<HTMLButtonElement> &

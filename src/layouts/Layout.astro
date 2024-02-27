@@ -23,11 +23,17 @@ const { title } = Astro.props;
       // import { $authLoaded } from "@/utils/stores";
       import { auth, db } from "@/firebase/client";
       import { User } from "@/utils/firestore.types";
-      import { $authLoaded, $userData, $userFromFirebase, $githubStarData } from "@/utils/stores";
+      import {
+        $authLoaded,
+        $userData,
+        $userFromFirebase,
+        $githubStarData,
+        $githubStarDataLoading,
+      } from "@/utils/stores";
       import { onAuthStateChanged } from "firebase/auth";
       import { Unsubscribe, doc, onSnapshot } from "firebase/firestore";
       import { Octokit, App } from "octokit";
-      import { Convert, TypesGithubStarAPIResponse } from "@/utils/types.github.starApiResponse";
+      import { GithubStar } from "@/utils/types.github";
       console.log("hello from the head!");
 
       onAuthStateChanged(auth, (user) => {
@@ -93,20 +99,22 @@ const { title } = Astro.props;
           /**
            * GitHub
            */
-          // const octokit = new Octokit({ auth: import.meta.env.PUBLIC_GITHUB_PAT });
+          const octokit = new Octokit({ auth: import.meta.env.PUBLIC_GITHUB_PAT });
 
-          // const data = await octokit.paginate<TypesGithubStarAPIResponse>({
-          //   method: "GET",
-          //   url: "/user/starred",
-          //   headers: {
-          //     "X-GitHub-Api-Version": "2022-11-28",
-          //   },
-          //   per_page: 100, // gets 100 repos per page
-          // });
+          const data = await octokit.paginate<GithubStar>({
+            method: "GET",
+            url: "/user/starred",
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28",
+              accept: "application/vnd.github.star+json",
+            },
+            per_page: 100, // gets 100 repos per page
+          });
 
-          // $githubStarData.set(data);
+          $githubStarData.set(data);
+          $githubStarDataLoading.set(false);
 
-          // console.log("GitHub starred repos: ", $githubStarData.get());
+          console.log("GitHub starred repos: ", $githubStarData.get());
         }
 
         return () => {

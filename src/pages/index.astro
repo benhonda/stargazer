@@ -7,6 +7,7 @@ import { Icon } from "@/components/Icon";
 import { StargazerSidebarDirectory } from "@/components-custom/nav/StargazerSidebarList";
 import { PinnedThingsList } from "@/components-custom/home/PinnedThingsList";
 import { Sort } from "@/components-custom/home/Sort";
+import { StarredList } from "@/components-custom/home/StarredList";
 ---
 
 <Layout title="Stargazer">
@@ -45,7 +46,7 @@ import { Sort } from "@/components-custom/home/Sort";
     </aside>
 
     <!-- main content -->
-    <main>
+    <main class="mx-auto max-w-7xl">
       <!-- top -->
       <div class="p-4">
         <h1 class="text-base text-gray-500">Recents</h1>
@@ -76,12 +77,29 @@ import { Sort } from "@/components-custom/home/Sort";
       <!-- end sorting -->
 
       <!-- content -->
-      <div class="p-4">
-        <div class="pt-8">
-          <h2 class="text-xl">Starred this week</h2>
+      <div class="p-4 pt-8 space-y-16">
+        <div>
+          <h2 class="text-2xl">Starred this week</h2>
+          <StarredList client:only="react" granularity="this-week" />
+        </div>
+
+        <div>
+          <h2 class="text-2xl">Starred this month</h2>
+          <StarredList client:only="react" granularity="this-month" />
+        </div>
+
+        <div>
+          <h2 class="text-2xl">Starred in the past 6 months</h2>
+          <StarredList client:visible granularity="past-six-months" />
         </div>
       </div>
       <!-- end content -->
+
+      <!-- footer -->
+      <footer class="flex items-start justify-center mt-32 py-8 border-t border-gray-800">
+        <span class="text-xs text-gray-500">Thanks for being a Stargazer.</span>
+      </footer>
+      <!-- end footer -->
     </main>
   </div>
 </Layout>

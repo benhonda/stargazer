@@ -1,3 +1,4 @@
+import { Icon } from "@/components/Icon";
 import { logout } from "@/utils/auth.logout";
 
 /**
@@ -5,8 +6,9 @@ import { logout } from "@/utils/auth.logout";
  */
 export function LogoutButton() {
   return (
-    <button type="button" onClick={logout}>
-      Logout
+    <button type="button" className="sidebar-item hover:active" onClick={logout}>
+      <Icon name="logout" className="sidebar-item-svg rotate-180" />
+      <span>Logout</span>
     </button>
   );
 }
