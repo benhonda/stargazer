@@ -8,10 +8,15 @@ const primaryClasses =
   "bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-gray-600 text-gray-300 px-2.5 py-1.5 text-sm rounded-md";
 
 export function Clickable(
-  props: { variant: "primary" | "primary-lg"; as?: "button" | "a" } & React.ButtonHTMLAttributes<HTMLButtonElement> &
+  props: {
+    variant: "primary" | "primary-lg";
+    as?: "button" | "a";
+    buttonRef?: React.Ref<HTMLButtonElement>;
+    aRef?: React.Ref<HTMLAnchorElement>;
+  } & React.ButtonHTMLAttributes<HTMLButtonElement> &
     React.AnchorHTMLAttributes<HTMLAnchorElement>
 ) {
-  const { as = "button", variant, className, ...rest } = props;
+  const { buttonRef, aRef, as = "button", variant, className, ...rest } = props;
 
   const classes = twMerge(
     "inline-flex items-center",
@@ -21,11 +26,11 @@ export function Clickable(
   );
 
   if (as === "button") {
-    return <button type="button" className={classes} {...rest} />;
+    return <button type="button" className={classes} ref={buttonRef} {...rest} />;
   }
 
   if (as === "a") {
-    return <a className={classes} {...rest} />;
+    return <a className={classes} ref={aRef} {...rest} />;
   }
 
   return null;

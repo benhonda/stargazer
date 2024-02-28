@@ -79,18 +79,27 @@ import { StarredList } from "@/components-custom/home/StarredList";
       <!-- content -->
       <div class="p-4 pt-8 space-y-16">
         <div>
-          <h2 class="text-2xl">Starred this week</h2>
-          <StarredList client:only="react" granularity="this-week" />
+          <StarredList title="Starred this week" client:only="react" dayRange={[0, 7]} />
         </div>
 
         <div>
-          <h2 class="text-2xl">Starred this month</h2>
-          <StarredList client:only="react" granularity="this-month" />
+          <StarredList title="Starred this month" client:only="react" dayRange={[8, 30]} />
         </div>
 
         <div>
-          <h2 class="text-2xl">Starred in the past 6 months</h2>
-          <StarredList client:visible granularity="past-six-months" />
+          <StarredList title="Starred in the past 6 months" client:visible dayRange={[31, 180]} />
+        </div>
+
+        <div>
+          <StarredList client:visible title="Starred in the past year" dayRange={[181, 365]} />
+        </div>
+
+        <div>
+          <StarredList client:visible title="Starred in the past 2 years" dayRange={[366, 730]} />
+        </div>
+
+        <div>
+          <StarredList client:visible title="Starred more than 2 years ago" dayRange={[731]} />
         </div>
       </div>
       <!-- end content -->

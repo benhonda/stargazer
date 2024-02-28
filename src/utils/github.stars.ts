@@ -4,6 +4,8 @@ import { GithubStar } from "./types.github";
 /**
  * Get the stars from the last N to M days ago
  * I.e. if N = 7 and M = 14, it will return the stars from 7 days ago to 14 days ago
+ *
+ * If laterStop is not provided, it will return the stars from N to the end of the list
  * @param data
  * @param earlierStop
  * @param laterStop
@@ -14,15 +16,9 @@ export function computeStarsFromNToMDaysAgo(data: GithubStar[] | null, earlierSt
   if (laterStop && laterStop < earlierStop) throw new Error("laterStop must be greater than or equal to earlierStop");
 
   const today = new Date();
-  // if laterStop is not provided, we will only get the stars from earlierStop days ago to today
-  let earlierStopDate = today;
-  let laterStopDate = subDays(today, earlierStop);
 
-  // if laterStop is provided, we will get the stars from earlierStop days ago to laterStop days ago
-  if (laterStop) {
-    earlierStopDate = subDays(today, earlierStop);
-    laterStopDate = subDays(today, laterStop);
-  }
+  const earlierStopDate = subDays(today, earlierStop);
+  const laterStopDate = laterStop ? subDays(today, laterStop) : null;
 
   let startSliceIndex = null;
   let endSliceIndex = data.length;
@@ -34,7 +30,7 @@ export function computeStarsFromNToMDaysAgo(data: GithubStar[] | null, earlierSt
       startSliceIndex = i;
     }
 
-    if (isBefore(starredAtDate, laterStopDate)) {
+    if (laterStopDate && isBefore(starredAtDate, laterStopDate)) {
       endSliceIndex = i;
       break;
     }
