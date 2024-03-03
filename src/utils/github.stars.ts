@@ -36,5 +36,7 @@ export function computeStarsFromNToMDaysAgo(data: GithubStar[] | null, earlierSt
     }
   }
 
-  return data.slice(startSliceIndex || 0, endSliceIndex);
+  if (startSliceIndex === null) return null;
+
+  return data.slice(startSliceIndex, endSliceIndex);
 }

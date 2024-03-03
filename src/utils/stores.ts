@@ -11,6 +11,8 @@ export const $authLoaded = atom(false); // track if auth is loaded
 export const $githubStarData = atom<GithubStar[] | null>(null); // stores the user data
 export const $githubStarDataLoading = atom(true); // track if the github star data is loading
 
+export const $searchParams = atom<Record<string, string | string[]> | null>(null); // stores the search params
+
 // export const $githubStarDataThisWeek = computed($githubStarData, (data) => computeStarsInLastNDays(data, 7));
 // export const $githubStarDataThisMonth = computed($githubStarData, (data) => computeStarsInLastNDays(data, 30));
 // export const $githubStarDataPastSixMonths = computed($githubStarData, (data) => computeStarsInLastNDays(data, 180));

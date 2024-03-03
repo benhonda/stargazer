@@ -1,5 +1,5 @@
 ---
-import { $userData } from "@/utils/stores";
+import { $searchParams, $userData } from "@/utils/stores";
 import Layout from "../layouts/Layout.astro";
 // import { FirestoreData } from "@/components/FirestoreData";
 import { LogoutButton } from "@/components-custom/nav/LogoutButton";
@@ -8,6 +8,7 @@ import { StargazerSidebarDirectory } from "@/components-custom/nav/StargazerSide
 import { PinnedThingsList } from "@/components-custom/home/PinnedThingsList";
 import { Sort } from "@/components-custom/home/Sort";
 import { StarredList } from "@/components-custom/home/StarredList";
+import { GitHubStarsLoadMore } from "@/components-custom/home/GitHubStarsLoadMore";
 ---
 
 <Layout title="Stargazer">
@@ -77,30 +78,80 @@ import { StarredList } from "@/components-custom/home/StarredList";
       <!-- end sorting -->
 
       <!-- content -->
-      <div class="p-4 pt-8 space-y-16">
-        <div>
-          <StarredList title="Starred this week" client:only="react" dayRange={[0, 7]} />
-        </div>
+      <!-- {
+        $searchParams.subscribe((params) => {
+          console.log("params", params);
+          return !params?.sort || params?.sort === "created" ? (
+            // default rendering
+            <div class="p-4 pt-8 space-y-16">
+              <div>
+                <StarredList client:load title="Starred this week" dayRange={[0, 7]} />
+              </div>
 
-        <div>
-          <StarredList title="Starred this month" client:only="react" dayRange={[8, 30]} />
-        </div>
+              <div>
+                <StarredList client:load title="Starred this month" dayRange={[8, 30]} />
+              </div>
 
-        <div>
-          <StarredList title="Starred in the past 6 months" client:visible dayRange={[31, 180]} />
-        </div>
+              <div>
+                <StarredList client:visible title="Starred in the past 6 months" dayRange={[31, 180]} />
+              </div>
 
-        <div>
-          <StarredList client:visible title="Starred in the past year" dayRange={[181, 365]} />
-        </div>
+              <div>
+                <StarredList client:visible title="Starred in the past year" dayRange={[181, 365]} />
+              </div>
 
-        <div>
-          <StarredList client:visible title="Starred in the past 2 years" dayRange={[366, 730]} />
-        </div>
+              <div>
+                <StarredList client:visible title="Starred in the past 2 years" dayRange={[366, 730]} />
+              </div>
 
-        <div>
-          <StarredList client:visible title="Starred more than 2 years ago" dayRange={[731]} />
+              <div>
+                <StarredList client:visible title="Starred more than 2 years ago" dayRange={[731]} />
+              </div>
+
+              <div class="flex items-start justify-center">
+                <GitHubStarsLoadMore client:only="react" />
+              </div>
+            </div>
+          ) : (
+            // all-in-one rendering
+            <div>Hi</div>
+          );
+        })
+      } -->
+      <!-- <div id="content">
+        <div class="p-4 pt-8 space-y-16">
+          <div>
+            <StarredList client:load title="Starred this week" dayRange={[0, 7]} />
+          </div>
+
+          <div>
+            <StarredList client:load title="Starred this month" dayRange={[8, 30]} />
+          </div>
+
+          <div>
+            <StarredList client:visible title="Starred in the past 6 months" dayRange={[31, 180]} />
+          </div>
+
+          <div>
+            <StarredList client:visible title="Starred in the past year" dayRange={[181, 365]} />
+          </div>
+
+          <div>
+            <StarredList client:visible title="Starred in the past 2 years" dayRange={[366, 730]} />
+          </div>
+
+          <div>
+            <StarredList client:visible title="Starred more than 2 years ago" dayRange={[731]} />
+          </div>
+
+          <div class="flex items-start justify-center">
+            <GitHubStarsLoadMore client:only="react" />
+          </div>
         </div>
+      </div> -->
+      <StarredList client:load />
+      <div class="flex items-start justify-center">
+        <GitHubStarsLoadMore client:only="react" />
       </div>
       <!-- end content -->
 

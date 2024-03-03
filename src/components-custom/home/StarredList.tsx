@@ -1,23 +1,103 @@
+import { Clickable } from "@/components/Clickable";
 import { Icon } from "@/components/Icon";
 import { computeStarsFromNToMDaysAgo } from "@/utils/github.stars";
+import { useGithubStars, useGithubStarsPaginated } from "@/utils/github.swr";
 import { createNiceNumber } from "@/utils/niceNumbers";
-import { $githubStarData, $githubStarDataLoading } from "@/utils/stores";
+import { $searchParams } from "@/utils/stores";
 import { GithubStar } from "@/utils/types.github";
 import { useStore } from "@nanostores/react";
 import { addDays, format, formatDistanceToNowStrict } from "date-fns";
 import { useEffect, useState } from "react";
 
-export function StarredList(props: { title: string; dayRange: [number, number?] }) {
+export function StarredList() {
+  const searchParams = useStore($searchParams);
+
+  if (!searchParams?.sort || searchParams.sort === "created") {
+    return (
+      <div className="p-4 pt-8 space-y-16">
+        <div>
+          <StarsInDateRange title="Starred this week" dayRange={[0, 7]} />
+        </div>
+
+        <div>
+          <StarsInDateRange title="Starred this month" dayRange={[8, 30]} />
+        </div>
+
+        <div>
+          <StarsInDateRange title="Starred in the past 6 months" dayRange={[31, 180]} />
+        </div>
+
+        <div>
+          <StarsInDateRange title="Starred in the past year" dayRange={[181, 365]} />
+        </div>
+
+        <div>
+          <StarsInDateRange title="Starred in the past 2 years" dayRange={[366, 730]} />
+        </div>
+
+        <div>
+          <StarsInDateRange title="Starred more than 2 years ago" dayRange={[731]} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <StarsAllInOneView />
+    </div>
+  );
+}
+
+function StarsAllInOneView() {
+  const { data, isLoading, isValidating, size } = useGithubStarsPaginated();
+
+  const isLoadingMore = isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
+  const isEmpty = data?.[0]?.length === 0;
+  const isRefreshing = isValidating && data && data.length === size;
+
+  if (!isLoading && isEmpty) return <div></div>;
+
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      {isLoading ? (
+        <>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+            <div key={i} className="bg-gray-900 border-gray-800 rounded-md aspect-[3/2] animate-pulse"></div>
+          ))}
+        </>
+      ) : (
+        <>
+          {data?.flat().map((star) => {
+            return <StarCard key={`star-${star.repo.id}`} star={star} />;
+          })}
+        </>
+      )}
+    </div>
+  );
+}
+
+function StarsInDateRange(props: { title: string; dayRange: [number, number?] }) {
   const { title, dayRange } = props;
-  const _githubStarData = useStore($githubStarData);
-  const githubStarDataLoading = useStore($githubStarDataLoading);
+
+  // const _githubStarData = useStore($githubStarData);
+  // const githubStarDataLoading = useStore($githubStarDataLoading);
+  // const [page, setPage] = useState(1);
+
+  // const { data, isLoading, isValidating } = useGithubStars({ perPage: 30 });
+  const { data, isLoading, isValidating, size } = useGithubStarsPaginated();
+
+  const isLoadingMore = isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
+  const isEmpty = data?.[0]?.length === 0;
+  const isRefreshing = isValidating && data && data.length === size;
+
   const [stars, setStars] = useState<GithubStar[] | null>(null);
 
   useEffect(() => {
-    console.log("render");
+    const _githubStarData = data?.flat() || [];
     // the stars are sorted, so we just need to find the first star that is older than the time we want
     setStars(computeStarsFromNToMDaysAgo(_githubStarData, dayRange[0], dayRange[1]));
-  }, [dayRange, _githubStarData]);
+  }, [dayRange, data]);
 
   /**
    * Hide the section if we don't have any stars for this time range
@@ -27,18 +107,18 @@ export function StarredList(props: { title: string; dayRange: [number, number?] 
    *      with no content seems to fix it, but I am still getting a "Hydration failed because the
    *      initial UI does not match what was rendered on the server" console error
    */
-  if (!githubStarDataLoading && !stars) return <div></div>;
+  if (!isLoading && !stars) return <div></div>;
 
   return (
     <>
       <h2 className="text-2xl">{title}</h2>
 
       <div className="mt-8 grid grid-cols-3 gap-4">
-        {githubStarDataLoading ? (
+        {isLoading ? (
           <>
-            <div className="bg-gray-900 border-gray-800 rounded-md aspect-[3/2] animate-pulse"></div>
-            <div className="bg-gray-900 border-gray-800 rounded-md aspect-[3/2] animate-pulse"></div>
-            <div className="bg-gray-900 border-gray-800 rounded-md aspect-[3/2] animate-pulse"></div>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+              <div key={i} className="bg-gray-900 border-gray-800 rounded-md aspect-[3/2] animate-pulse"></div>
+            ))}
           </>
         ) : (
           <>
@@ -51,6 +131,10 @@ export function StarredList(props: { title: string; dayRange: [number, number?] 
                 <p>No stars found</p>
               </div>
             )}
+            {/* 
+            <Clickable type="button" variant="primary" onClick={() => setSize(size + 1)}>
+              Load more
+            </Clickable> */}
           </>
         )}
       </div>

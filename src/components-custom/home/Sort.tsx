@@ -1,7 +1,9 @@
 import { Clickable } from "@/components/Clickable";
 import { Icon } from "@/components/Icon";
-import { useURLSearchParams } from "@/utils/searchParams";
+import { updateSearchParams } from "@/utils/searchParams";
+import { $searchParams } from "@/utils/stores";
 import { Listbox, Transition } from "@headlessui/react";
+import { useStore } from "@nanostores/react";
 import { forwardRef, useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -10,21 +12,19 @@ const CustomSortBtn = forwardRef((props, ref: React.Ref<HTMLButtonElement>) => (
 ));
 
 const sortOptions = [
-  { key: "date_starred", label: "Date starred (default)" },
+  { key: "created", label: "Date starred (default)" },
+  { key: "updated", label: "Time since last commit" },
   { key: "most_stars", label: "Most stars" },
   { key: "least_stars", label: "Least stars" },
-  { key: "recency", label: "Time since last commit" },
   { key: "alphabetical", label: "Alphabetical" },
   { key: "reverse_alphabetical", label: "Reverse alphabetical" },
 ];
 
 export function Sort() {
-  // const [selectedPerson, setSelectedPerson] = useState(null);
-
-  const [searchParams, updateSearchParams] = useURLSearchParams();
+  const searchParams = useStore($searchParams);
 
   // const currentSort
-  const sort = sortOptions.find((p) => p.key === searchParams.sort) || sortOptions[0];
+  const sort = sortOptions.find((p) => p.key === searchParams?.sort) || sortOptions[0];
 
   return (
     <Listbox as="div" className="relative" value={sort} onChange={(val) => updateSearchParams({ sort: val.key })}>

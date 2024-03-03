@@ -29,12 +29,12 @@ const { title } = Astro.props;
         $userFromFirebase,
         $githubStarData,
         $githubStarDataLoading,
+        $searchParams,
       } from "@/utils/stores";
       import { onAuthStateChanged } from "firebase/auth";
       import { Unsubscribe, doc, onSnapshot } from "firebase/firestore";
       import { Octokit, App } from "octokit";
       import { GithubStar } from "@/utils/types.github";
-      console.log("hello from the head!");
 
       onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -72,6 +72,7 @@ const { title } = Astro.props;
          *
          * TODO: can we do better...?
          * TODO: NOTE: if we put this at the end of this fn, it will run after we get all the data from Firestore and GitHub
+         * TODO: NOTE: this means our app will not work with javascript disabled
          */
         const appElement = document.getElementById("app");
         let tm: NodeJS.Timeout;
@@ -97,24 +98,50 @@ const { title } = Astro.props;
           });
 
           /**
+           * Load the initial search params
+           */
+
+          function initSearchParams() {
+            const urlSearchParams = new URLSearchParams(window.location.search);
+            const params: Record<string, string | string[]> = {};
+
+            urlSearchParams.forEach((value, key) => {
+              if (params[key]) {
+                if (Array.isArray(params[key])) {
+                  (params[key] as string[]).push(value);
+                } else {
+                  params[key] = [params[key] as string, value];
+                }
+              } else {
+                params[key] = value;
+              }
+            });
+
+            return params;
+          }
+
+          $searchParams.set(initSearchParams());
+
+          /**
            * GitHub
            */
-          const octokit = new Octokit({ auth: import.meta.env.PUBLIC_GITHUB_PAT });
+          // const octokit = new Octokit({ auth: import.meta.env.PUBLIC_GITHUB_PAT });
 
-          const data = await octokit.paginate<GithubStar>({
-            method: "GET",
-            url: "/user/starred",
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28",
-              accept: "application/vnd.github.star+json",
-            },
-            per_page: 100, // gets 100 repos per page
-          });
+          // const data = await octokit.paginate<GithubStar>({
+          //   method: "GET",
+          //   url: "/user/starred",
+          //   headers: {
+          //     "X-GitHub-Api-Version": "2022-11-28",
+          //     accept: "application/vnd.github.star+json",
+          //   },
+          //   per_page: 100, // gets 100 repos per page
+          //   sort: "created",
+          // });
 
-          $githubStarData.set(data);
-          $githubStarDataLoading.set(false);
+          // $githubStarData.set(data);
+          // $githubStarDataLoading.set(false);
 
-          console.log("GitHub starred repos: ", $githubStarData.get());
+          // console.log("GitHub starred repos: ", $githubStarData.get());
         }
 
         return () => {
@@ -125,7 +152,8 @@ const { title } = Astro.props;
     </script>
   </head>
   <body>
-    <div id="app" style="display: none;">
+    <!-- <div id="app" style="display: none;"> -->
+    <div id="app">
       <slot />
     </div>
   </body>
