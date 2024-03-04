@@ -5,26 +5,15 @@ import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
-import { $searchParams } from "./stores";
+import { $searchParams, $starData, $starDataKey } from "./stores";
+import { SortKeys } from "./types";
 
 const octokit = new Octokit({ auth: import.meta.env.PUBLIC_GITHUB_PAT });
 
 export async function octokitFetcher(url: string) {
-  // url can contain a page query param
-  // const response = (await octokit.rest.activity.listReposStarredByAuthenticatedUser({
-  //   per_page: 30,
-  //   // sort: "created",
-  //   headers: {
-  //     "X-GitHub-Api-Version": "2022-11-28",
-  //     accept: "application/vnd.github.star+json",
-  //   },
-  // })) as unknown as GithubStar[]; // we have to cast it b/c we're using application/vnd.github.star+json and it doesn't know that
-
   console.info("fetching", url);
 
   const response = await octokit.request(`GET ${url}`, {
-    // per_page: 30,
-    // sort: "created", // options: created (date starred) or updated (last push)
     headers: {
       "X-GitHub-Api-Version": "2022-11-28",
       accept: "application/vnd.github.star+json",
@@ -47,7 +36,10 @@ export function useGithubStars(props?: { page?: number; perPage?: number; sort?:
   return res;
 }
 
-export const PAGE_SIZE = 40;
+export const PAGE_SIZE = 42;
+// this is the max number of stars we can fetch. Not for any technical reason, just because we need a number to
+// pass to the useSWRInfinite hook when we want to fetch all the stars (i.e. when we are sorting/filtering)
+export const MAX_PAGES = Math.floor(1000 / PAGE_SIZE);
 
 function getKey(pageIdx: number, prevPageData: GithubStar[] | null, sort: "created" | "updated" = "created") {
   if (prevPageData && !prevPageData.length) return null; // reached the end
@@ -56,59 +48,50 @@ function getKey(pageIdx: number, prevPageData: GithubStar[] | null, sort: "creat
 
 export function useGithubStarsPaginated() {
   const searchParams = useStore($searchParams);
+  const sortParam = searchParams?.sort as SortKeys;
   const sort = searchParams?.sort === "updated" ? "updated" : "created";
 
   // equivalent to useSWRImmutable https://swr.vercel.app/docs/revalidation#disable-automatic-revalidations
   const res = useSWRInfinite((pageIdx, prevPageData) => getKey(pageIdx, prevPageData, sort), octokitFetcher, {
-    revalidateOnMount: false,
+    // revalidateOnMount: false,
     revalidateOnFocus: false,
     revalidateIfStale: false,
     revalidateOnReconnect: false,
     parallel: true,
+    // initialSize: sortParam === "created" || sortParam === "updated" ? 1 : MAX_PAGES,
+    initialSize: 1,
   });
 
-  return res;
+  /**
+   * Set size to MAX_PAGES to load all data if sortParam is not "created" or "updated"
+   */
+  useEffect(() => {
+    if (!sortParam || sortParam === "created" || sortParam === "updated") return;
+    if (res.size === MAX_PAGES) return;
+
+    res.setSize(MAX_PAGES);
+  }, [sortParam, res.size]);
+
+  /**
+   * send data to store
+   * I need to do this because we have computed stores that depend on the star data
+   */
+  useEffect(() => {
+    if (!res.data) return;
+
+    // TODO: NOTE: this seems to work for our purposes, but it will not allow data to be refreshed
+    const fetchKey = getKey(res.size - 1, null, sort);
+    if ($starDataKey.get() === fetchKey) return;
+
+    // set the key so we can check if we need to update the store
+    $starDataKey.set(fetchKey);
+    // set the data
+    $starData.set(res.data.flat());
+  }, [res.data]);
+
+  const isLoadingMore = res.isLoading || (res.size > 0 && res.data && typeof res.data[res.size - 1] === "undefined");
+  const isEmpty = res.data?.[0]?.length === 0;
+  const isRefreshing = res.isValidating && res.data && res.data.length === res.size;
+
+  return { ...res, isLoadingMore, isEmpty, isRefreshing };
 }
-
-/**
- * Parse the data from the GitHub API response
- * Taken from https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api?apiVersion=2022-11-28
- * @param data
- * @returns
- */
-// function parseData(data: any) {
-//   // If the data is an array, return that
-//   if (Array.isArray(data)) {
-//     return data;
-//   }
-
-//   // Some endpoints respond with 204 No Content instead of empty array
-//   //   when there is no data. In that case, return an empty array.
-//   if (!data) {
-//     return [];
-//   }
-
-//   // Otherwise, the array of items that we want is in an object
-//   // Delete keys that don't include the array of items
-//   delete data.incomplete_results;
-//   delete data.repository_selection;
-//   delete data.total_count;
-//   // Pull out the array of items
-//   const namespaceKey = Object.keys(data)[0];
-//   data = data[namespaceKey];
-
-//   return data;
-// }
-
-// const octokit = new Octokit({ auth: import.meta.env.PUBLIC_GITHUB_PAT });
-
-// const data = await octokit.paginate<GithubStar>({
-//   method: "GET",
-//   url: "/user/starred",
-//   headers: {
-//     "X-GitHub-Api-Version": "2022-11-28",
-//     accept: "application/vnd.github.star+json",
-//   },
-//   per_page: 100, // gets 100 repos per page
-//   sort: "updated",
-// });

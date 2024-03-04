@@ -3,7 +3,15 @@ import { Icon } from "@/components/Icon";
 import { computeStarsFromNToMDaysAgo } from "@/utils/github.stars";
 import { useGithubStars, useGithubStarsPaginated } from "@/utils/github.swr";
 import { createNiceNumber } from "@/utils/niceNumbers";
-import { $searchParams } from "@/utils/stores";
+import {
+  $searchParams,
+  $starData,
+  $starDataSortedAlphabetically,
+  $starDataSortedByLeastStars,
+  $starDataSortedByMostStars,
+  $starDataSortedReverseAlphabetically,
+} from "@/utils/stores";
+import { SortKeys } from "@/utils/types";
 import { GithubStar } from "@/utils/types.github";
 import { useStore } from "@nanostores/react";
 import { addDays, format, formatDistanceToNowStrict } from "date-fns";
@@ -11,85 +19,92 @@ import { useEffect, useState } from "react";
 
 export function StarredList() {
   const searchParams = useStore($searchParams);
-
-  if (!searchParams?.sort || searchParams.sort === "created") {
-    return (
-      <div className="p-4 pt-8 space-y-16">
-        <div>
-          <StarsInDateRange title="Starred this week" dayRange={[0, 7]} />
-        </div>
-
-        <div>
-          <StarsInDateRange title="Starred this month" dayRange={[8, 30]} />
-        </div>
-
-        <div>
-          <StarsInDateRange title="Starred in the past 6 months" dayRange={[31, 180]} />
-        </div>
-
-        <div>
-          <StarsInDateRange title="Starred in the past year" dayRange={[181, 365]} />
-        </div>
-
-        <div>
-          <StarsInDateRange title="Starred in the past 2 years" dayRange={[366, 730]} />
-        </div>
-
-        <div>
-          <StarsInDateRange title="Starred more than 2 years ago" dayRange={[731]} />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-4">
-      <StarsAllInOneView />
-    </div>
-  );
-}
-
-function StarsAllInOneView() {
   const { data, isLoading, isValidating, size } = useGithubStarsPaginated();
 
-  const isLoadingMore = isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
-  const isEmpty = data?.[0]?.length === 0;
-  const isRefreshing = isValidating && data && data.length === size;
+  const sortKey = (searchParams?.sort as SortKeys) || "created";
+
+  switch (sortKey) {
+    case "updated":
+      return <ListStars data={data?.flat() || null} isLoading={isLoading} />;
+    case "most_stars":
+      return <StarsSortedByMostStars />;
+    case "least_stars":
+      return <StarsSortedByLeastStars />;
+    case "alphabetical":
+      return <StarsSortedAlphabetically />;
+    case "reverse_alphabetical":
+      return <StarsSortedReverseAlphabetically />;
+    default:
+      return (
+        <div className="pt-8 space-y-16">
+          <StarsInDateRange title="Starred this week" dayRange={[0, 7]} />
+          <StarsInDateRange title="Starred this month" dayRange={[8, 30]} />
+          <StarsInDateRange title="Starred in the past 6 months" dayRange={[31, 180]} />
+          <StarsInDateRange title="Starred in the past year" dayRange={[181, 365]} />
+          <StarsInDateRange title="Starred in the past 2 years" dayRange={[366, 730]} />
+          <StarsInDateRange title="Starred more than 2 years ago" dayRange={[731]} />
+        </div>
+      );
+  }
+}
+
+function StarsSortedByMostStars() {
+  const { isLoading } = useGithubStarsPaginated();
+  const stardata = useStore($starDataSortedByMostStars);
+
+  return <ListStars data={stardata} isLoading={isLoading} />;
+}
+
+function StarsSortedByLeastStars() {
+  const { isLoading } = useGithubStarsPaginated();
+  const stardata = useStore($starDataSortedByLeastStars);
+
+  return <ListStars data={stardata} isLoading={isLoading} />;
+}
+
+function StarsSortedAlphabetically() {
+  const { isLoading } = useGithubStarsPaginated();
+  const stardata = useStore($starDataSortedAlphabetically);
+
+  return <ListStars data={stardata} isLoading={isLoading} />;
+}
+
+function StarsSortedReverseAlphabetically() {
+  const { isLoading } = useGithubStarsPaginated();
+  const stardata = useStore($starDataSortedReverseAlphabetically);
+
+  return <ListStars data={stardata} isLoading={isLoading} />;
+}
+
+function ListStars({ data, isLoading }: { data: GithubStar[] | null; isLoading: boolean }) {
+  const isEmpty = data?.length === 0;
 
   if (!isLoading && isEmpty) return <div></div>;
 
   return (
-    <div className="grid grid-cols-3 gap-4">
-      {isLoading ? (
-        <>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-            <div key={i} className="bg-gray-900 border-gray-800 rounded-md aspect-[3/2] animate-pulse"></div>
-          ))}
-        </>
-      ) : (
-        <>
-          {data?.flat().map((star) => {
-            return <StarCard key={`star-${star.repo.id}`} star={star} />;
-          })}
-        </>
-      )}
+    <div className="p-4">
+      <div className="grid grid-cols-3 gap-4">
+        {isLoading ? (
+          <>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+              <div key={i} className="bg-gray-900 border-gray-800 rounded-md aspect-[3/2] animate-pulse"></div>
+            ))}
+          </>
+        ) : (
+          <>
+            {data?.map((star) => {
+              return <StarCard key={`star-${star.repo.id}`} star={star} />;
+            })}
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
 function StarsInDateRange(props: { title: string; dayRange: [number, number?] }) {
   const { title, dayRange } = props;
-
-  // const _githubStarData = useStore($githubStarData);
-  // const githubStarDataLoading = useStore($githubStarDataLoading);
-  // const [page, setPage] = useState(1);
-
-  // const { data, isLoading, isValidating } = useGithubStars({ perPage: 30 });
   const { data, isLoading, isValidating, size } = useGithubStarsPaginated();
-
-  const isLoadingMore = isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
-  const isEmpty = data?.[0]?.length === 0;
-  const isRefreshing = isValidating && data && data.length === size;
 
   const [stars, setStars] = useState<GithubStar[] | null>(null);
 
@@ -110,35 +125,13 @@ function StarsInDateRange(props: { title: string; dayRange: [number, number?] })
   if (!isLoading && !stars) return <div></div>;
 
   return (
-    <>
-      <h2 className="text-2xl">{title}</h2>
+    <div>
+      <h2 className="px-4 text-2xl">{title}</h2>
 
-      <div className="mt-8 grid grid-cols-3 gap-4">
-        {isLoading ? (
-          <>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-              <div key={i} className="bg-gray-900 border-gray-800 rounded-md aspect-[3/2] animate-pulse"></div>
-            ))}
-          </>
-        ) : (
-          <>
-            {stars?.map((star) => {
-              return <StarCard key={`star-${star.repo.id}`} star={star} />;
-            })}
-
-            {stars?.length === 0 && (
-              <div className="col-span-3 text-center">
-                <p>No stars found</p>
-              </div>
-            )}
-            {/* 
-            <Clickable type="button" variant="primary" onClick={() => setSize(size + 1)}>
-              Load more
-            </Clickable> */}
-          </>
-        )}
+      <div className="mt-4">
+        <ListStars data={stars} isLoading={isLoading} />
       </div>
-    </>
+    </div>
   );
 }
 
@@ -148,51 +141,35 @@ function StarCard(props: { star: GithubStar }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-md flex flex-col">
       <div className="flex-1 p-3">
-        <div className="flex items-start justify-end">
-          {/* <img
-            src={star.repo.owner.avatar_url}
-            alt={star.repo.owner.login}
-            className="shrink-0 mb-2.5 mt-[2.5px] size-5 rounded-full object-contain mr-2.5"
-          /> */}
-          {/* <a
-            href={star.repo.stargazers_url}
-            target="_blank"
-            rel="noreferrer"
-            className="shrink-0 mt-0.5 inline-flex items-center text-gray-500 text-sm"
-          >
-            <Icon name="star" strokeWidth={2.5} className="shrink-0 size-3.5 mr-1" />
-            <span>{createNiceNumber(star.repo.stargazers_count)}</span>
-          </a> */}
-        </div>
         {/* top line */}
         <div className="flex items-start">
-          <img
-            src={star.repo.owner.avatar_url}
-            alt={star.repo.owner.login}
-            className="shrink-0 mt-[2.5px] size-5 rounded-full object-contain mr-2.5"
-          />
-
-          <a
-            href={star.repo.html_url}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-block flex-1 space-x-1 text-gray-400 truncate"
-            title={star.repo.full_name}
-          >
-            <span>{star.repo.owner.login}</span>
-            <span>/</span>
-            <span className=" text-white">{star.repo.name}</span>
+          <a href={star.repo.owner.html_url} target="_blank" rel="noreferrer" className="shrink-0">
+            <img
+              src={star.repo.owner.avatar_url}
+              alt={star.repo.owner.login}
+              className="mt-[2.5px] size-5 rounded-full object-contain mr-2.5"
+            />
           </a>
 
-          {/* <a
-            href={star.repo.stargazers_url}
-            target="_blank"
-            rel="noreferrer"
-            className="shrink-0 mt-0.5 inline-flex items-center text-gray-500 text-sm"
-          >
-            <Icon name="star" strokeWidth={2.5} className="shrink-0 size-3.5 mr-1" />
-            <span>{createNiceNumber(star.repo.stargazers_count)}</span>
-          </a> */}
+          <span className="inline-block flex-1 text-gray-400 truncate group" title={star.repo.full_name}>
+            <a href={star.repo.html_url} target="_blank" rel="noreferrer" className="peer">
+              {star.repo.owner.login}
+            </a>
+            <a href={star.repo.html_url} target="_blank" rel="noreferrer" className="peer">
+              {" / "}
+            </a>
+            <a href={star.repo.html_url} target="_blank" rel="noreferrer" className=" text-white peer">
+              {star.repo.name}
+            </a>
+            <a
+              href={star.repo.html_url}
+              target="_blank"
+              rel="noreferrer"
+              className="transition-opacity opacity-0 peer-hover:opacity-100"
+            >
+              <Icon name="arrowUpRight" className="text-white size-3.5 -mb-0.5 ml-1" strokeWidth={3} />
+            </a>
+          </span>
         </div>
 
         {/* desc */}

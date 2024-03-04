@@ -7,6 +7,7 @@ import { Icon } from "@/components/Icon";
 import { StargazerSidebarDirectory } from "@/components-custom/nav/StargazerSidebarList";
 import { PinnedThingsList } from "@/components-custom/home/PinnedThingsList";
 import { Sort } from "@/components-custom/home/Sort";
+import { Filter } from "@/components-custom/home/Filter";
 import { StarredList } from "@/components-custom/home/StarredList";
 import { GitHubStarsLoadMore } from "@/components-custom/home/GitHubStarsLoadMore";
 ---
@@ -67,88 +68,17 @@ import { GitHubStarsLoadMore } from "@/components-custom/home/GitHubStarsLoadMor
       <div class="p-4 flex space-x-4">
         <div>
           <span class="label block">Sort</span>
-          <Sort client:only="react" />
+          <Sort client:load />
         </div>
 
         <div>
           <span class="label block">Filter</span>
-          <Sort client:only="react" />
+          <Filter client:load />
         </div>
       </div>
       <!-- end sorting -->
 
       <!-- content -->
-      <!-- {
-        $searchParams.subscribe((params) => {
-          console.log("params", params);
-          return !params?.sort || params?.sort === "created" ? (
-            // default rendering
-            <div class="p-4 pt-8 space-y-16">
-              <div>
-                <StarredList client:load title="Starred this week" dayRange={[0, 7]} />
-              </div>
-
-              <div>
-                <StarredList client:load title="Starred this month" dayRange={[8, 30]} />
-              </div>
-
-              <div>
-                <StarredList client:visible title="Starred in the past 6 months" dayRange={[31, 180]} />
-              </div>
-
-              <div>
-                <StarredList client:visible title="Starred in the past year" dayRange={[181, 365]} />
-              </div>
-
-              <div>
-                <StarredList client:visible title="Starred in the past 2 years" dayRange={[366, 730]} />
-              </div>
-
-              <div>
-                <StarredList client:visible title="Starred more than 2 years ago" dayRange={[731]} />
-              </div>
-
-              <div class="flex items-start justify-center">
-                <GitHubStarsLoadMore client:only="react" />
-              </div>
-            </div>
-          ) : (
-            // all-in-one rendering
-            <div>Hi</div>
-          );
-        })
-      } -->
-      <!-- <div id="content">
-        <div class="p-4 pt-8 space-y-16">
-          <div>
-            <StarredList client:load title="Starred this week" dayRange={[0, 7]} />
-          </div>
-
-          <div>
-            <StarredList client:load title="Starred this month" dayRange={[8, 30]} />
-          </div>
-
-          <div>
-            <StarredList client:visible title="Starred in the past 6 months" dayRange={[31, 180]} />
-          </div>
-
-          <div>
-            <StarredList client:visible title="Starred in the past year" dayRange={[181, 365]} />
-          </div>
-
-          <div>
-            <StarredList client:visible title="Starred in the past 2 years" dayRange={[366, 730]} />
-          </div>
-
-          <div>
-            <StarredList client:visible title="Starred more than 2 years ago" dayRange={[731]} />
-          </div>
-
-          <div class="flex items-start justify-center">
-            <GitHubStarsLoadMore client:only="react" />
-          </div>
-        </div>
-      </div> -->
       <StarredList client:load />
       <div class="flex items-start justify-center">
         <GitHubStarsLoadMore client:only="react" />
